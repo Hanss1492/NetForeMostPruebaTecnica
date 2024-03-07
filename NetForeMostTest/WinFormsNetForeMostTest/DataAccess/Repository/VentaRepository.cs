@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Data.SqlClient;
 using WinFormsNetForeMostTest.DataAcess.Utils;
 
@@ -19,15 +20,13 @@ namespace WinFormsNetForeMostTest.DataAccess.Repository
             {
                 using (SqlConnection connection = new SqlConnection(_connectionString))
                 {
-                    connection.Open();
-
-                    using (SqlCommand command = connection.CreateCommand())
+                    using (SqlCommand command = new SqlCommand("RegistrarVenta", connection))
                     {
-                        command.CommandText = "INSERT INTO Ventas (ProductoID, CantidadVendida, FechaVenta) VALUES (@ProductoID, @CantidadVendida, @FechaVenta)";
+                        command.CommandType = CommandType.StoredProcedure;
                         command.Parameters.AddWithValue("@ProductoID", productoID);
                         command.Parameters.AddWithValue("@CantidadVendida", cantidadVendida);
                         command.Parameters.AddWithValue("@FechaVenta", DateTime.Now);
-
+                        connection.Open();
                         command.ExecuteNonQuery();
                     }
                 }
@@ -39,5 +38,6 @@ namespace WinFormsNetForeMostTest.DataAccess.Repository
                 throw;
             }
         }
+
     }
 }

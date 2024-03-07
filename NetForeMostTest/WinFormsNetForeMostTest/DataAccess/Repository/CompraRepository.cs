@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Data.SqlClient;
 
 namespace WinFormsNetForeMostTest.DataAccess.Repository
@@ -14,18 +15,30 @@ namespace WinFormsNetForeMostTest.DataAccess.Repository
 
         public void RegistrarCompra(int productoID, int cantidadComprada, decimal precioUnitario)
         {
-            using (SqlConnection connection = new SqlConnection(_connectionString))
+            try
             {
-                string query = "INSERT INTO Compras (ProductoID, CantidadComprada, PrecioUnitario, FechaCompra) " +
-                               "VALUES (@ProductoID, @CantidadComprada, @PrecioUnitario, @FechaCompra)";
-                SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@ProductoID", productoID);
-                command.Parameters.AddWithValue("@CantidadComprada", cantidadComprada);
-                command.Parameters.AddWithValue("@PrecioUnitario", precioUnitario);
-                command.Parameters.AddWithValue("@FechaCompra", DateTime.Now);
-                connection.Open();
-                command.ExecuteNonQuery();
+                using (SqlConnection connection = new SqlConnection(_connectionString))
+                {
+                    using (SqlCommand command = new SqlCommand("RegistrarCompra", connection))
+                    {
+                        command.CommandType = CommandType.StoredProcedure;
+                        command.Parameters.AddWithValue("@ProductoID", productoID);
+                        command.Parameters.AddWithValue("@CantidadComprada", cantidadComprada);
+                        command.Parameters.AddWithValue("@PrecioUnitario", precioUnitario);
+                        command.Parameters.AddWithValue("@FechaCompra", DateTime.Now);
+
+                        connection.Open();
+                        command.ExecuteNonQuery();
+                    }
+                }
             }
+            catch (Exception ex)
+            {
+                // Manejar cualquier error y mostrar un mensaje al usuario
+                Console.WriteLine($"Error al registrar la compra: {ex.Message}");
+                throw;
+            }
+
         }
     }
 }

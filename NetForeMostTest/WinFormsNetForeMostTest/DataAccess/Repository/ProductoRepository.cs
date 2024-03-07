@@ -22,61 +22,83 @@ namespace WinFormsNetForeMostTest.DataAccess.Repository
             List<Producto> productos = new List<Producto>();
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
-                string query = "SELECT * FROM Productos";
-                SqlCommand command = new SqlCommand(query, connection);
-                connection.Open();
-                SqlDataReader reader = command.ExecuteReader();
-                while (reader.Read())
+                using (SqlCommand command = new SqlCommand("ObtenerProductos", connection))
                 {
-                    Producto producto = new Producto
+                    command.CommandType = CommandType.StoredProcedure;
+
+                    connection.Open();
+                    SqlDataReader reader = command.ExecuteReader();
+                    while (reader.Read())
                     {
-                        ProductoID = Convert.ToInt32(reader["ProductoID"]),
-                        ProductoNombre = reader["ProductoNombre"].ToString(),
-                        ProductoDescripcion = reader["ProductoDescripcion"].ToString(),
-                        CantidadDisponible = Convert.ToInt32(reader["CantidadDisponible"]),
-                    };
-                    productos.Add(producto);
+                        Producto producto = new Producto
+                        {
+                            ProductoID = Convert.ToInt32(reader["ProductoID"]),
+                            ProductoNombre = reader["ProductoNombre"].ToString(),
+                            ProductoDescripcion = reader["ProductoDescripcion"].ToString(),
+                            CantidadDisponible = Convert.ToInt32(reader["CantidadDisponible"]),
+                        };
+                        productos.Add(producto);
+                    }
                 }
             }
             return productos;
         }
 
+
         public Producto ObtenerProductoPorId(int productoID)
         {
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
-                string query = "SELECT * FROM Productos WHERE ProductoID = @ProductoID";
-                SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@ProductoID", productoID);
-                connection.Open();
-                SqlDataReader reader = command.ExecuteReader();
-                if (reader.Read())
+                using (SqlCommand command = new SqlCommand("ObtenerProductoPorId", connection))
                 {
-                    Producto producto = new Producto
+                    command.CommandType = CommandType.StoredProcedure;
+                    command.Parameters.AddWithValue("@ProductoID", productoID);
+
+                    connection.Open();
+                    SqlDataReader reader = command.ExecuteReader();
+                    if (reader.Read())
                     {
-                        ProductoID = Convert.ToInt32(reader["ProductoID"]),
-                        ProductoNombre = reader["ProductoNombre"].ToString(),
-                        ProductoDescripcion = reader["ProductoDescripcion"].ToString(),
-                        CantidadDisponible = Convert.ToInt32(reader["CantidadDisponible"])
-                    };
-                    return producto;
+                        Producto producto = new Producto
+                        {
+                            ProductoID = Convert.ToInt32(reader["ProductoID"]),
+                            ProductoNombre = reader["ProductoNombre"].ToString(),
+                            ProductoDescripcion = reader["ProductoDescripcion"].ToString(),
+                            CantidadDisponible = Convert.ToInt32(reader["CantidadDisponible"])
+                        };
+                        return producto;
+                    }
+                    return null;
                 }
-                return null;
             }
         }
 
+
         public void ActualizarCantidadDisponible(int productoID, int cantidadComprada)
         {
-            using (SqlConnection connection = new SqlConnection(_connectionString))
+            try
             {
-                string query = "UPDATE Productos SET CantidadDisponible = CantidadDisponible + @CantidadComprada WHERE ProductoID = @ProductoID";
-                SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@CantidadComprada", cantidadComprada);
-                command.Parameters.AddWithValue("@ProductoID", productoID);
-                connection.Open();
-                command.ExecuteNonQuery();
+                using (SqlConnection connection = new SqlConnection(_connectionString))
+                {
+                    connection.Open();
+                    SqlCommand command = new SqlCommand("ActualizarCantidadDisponible", connection);
+                    command.CommandType = CommandType.StoredProcedure;
+
+                    // Agregar los parámetros al procedimiento almacenado
+                    command.Parameters.AddWithValue("@ProductoID", productoID);
+                    command.Parameters.AddWithValue("@CantidadComprada", cantidadComprada);
+
+                    // Ejecutar el procedimiento almacenado
+                    command.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Manejar cualquier error y mostrar un mensaje al usuario
+                Console.WriteLine($"Error al actualizar la cantidad disponible del producto: {ex.Message}");
+                throw;
             }
         }
+
 
         public List<InformeTransaccionDTO> InformeTransacciones()
         {
